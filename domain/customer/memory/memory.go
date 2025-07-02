@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"fmt"
 	"sync"
 	"taverne/aggregate"
 	"taverne/domain/customer"
@@ -33,11 +34,31 @@ func (mr *MemoryRepository) Get(id uuid.UUID) (aggregate.Customer, error) {
 }
 
 // Add will add a new customer to the repository
-func (mr *MemoryRepository) Add(aggregate.Customer) error {
+func (mr *MemoryRepository) Add(c aggregate.Customer) error {
+	if mr.customers == nil {
+		// saftey check if customers is not create
+		mr.Lock()
+		mr.customers = make(map[uuid.UUID]aggregate.Customer)
+		mr.Unlock()
+	}
+	// Make sure customer isn't already in the repository
+	if _, ok := mr.customers[c.GetID()]; ok {
+		return fmt.Errorf("customer already exists: %w", customer.ErrFailedToAddCustomer)
+	}
+	mr.Lock()
+	mr.customers[c.GetID()] = c
+	mr.Unlock()
 	return nil
 }
 
 // Update will replace an existing customer information with the new customer information
-func (mr *MemoryRepository) Update(aggregate.Customer) error {
+func (mr *MemoryRepository) Update(c aggregate.Customer) error {
+	// Make sure Customer is in the repository
+	if _, ok := mr.customers[c.GetID()]; !ok {
+		return fmt.Errorf("customer does not exists: %w", customer.ErrUpdateCustomer)
+	}
+	mr.Lock()
+	mr.customers[c.GetID()] = c
+	mr.Unlock()
 	return nil
 }
