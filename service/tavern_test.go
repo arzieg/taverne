@@ -12,7 +12,7 @@ func Test_Tavern(t *testing.T) {
 
 	os, err := NewOrderService(
 		WithMemoryCustomerRepository(),
-		WithMemoryProductRepositroy(products),
+		WithMemoryProductRepository(products),
 	)
 
 	if err != nil {
@@ -43,4 +43,28 @@ func Test_Tavern(t *testing.T) {
 		t.Error(err)
 	}
 
+}
+
+func Test_SQLiteTavern(t *testing.T) {
+	// create OrderService
+	products := init_products(t)
+
+	os, err := NewOrderService(
+		WithSQLiteCustomerRepository("/tmp/ddd.db"),
+		WithMemoryProductRepository(products),
+	)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	_, err = NewTavern(WithOrderService(os)) // tavern
+	if err != nil {
+		t.Error(err)
+	}
+
+	_, err = aggregate.NewCustomer("Donald") // customer
+	if err != nil {
+		t.Error(err)
+	}
 }

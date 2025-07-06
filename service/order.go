@@ -2,10 +2,12 @@
 package service
 
 import (
+	"context"
 	"log"
 	"taverne/aggregate"
 	"taverne/domain/customer"
 	"taverne/domain/customer/memory"
+	"taverne/domain/customer/sqlite"
 	"taverne/domain/product"
 	prodmemory "taverne/domain/product/memory"
 
@@ -57,7 +59,7 @@ func WithMemoryCustomerRepository() OrderConfiguration {
 }
 
 // WithMemotyProductRepository adds a in memory product repo and adds all input products
-func WithMemoryProductRepositroy(products []aggregate.Product) OrderConfiguration {
+func WithMemoryProductRepository(products []aggregate.Product) OrderConfiguration {
 	return func(os *OrderService) error {
 		// Create the memory repo, if we needed parameters, such as connection strings they could be inputted here
 		pr := prodmemory.New()
@@ -70,6 +72,18 @@ func WithMemoryProductRepositroy(products []aggregate.Product) OrderConfiguratio
 			}
 		}
 		os.products = pr
+		return nil
+	}
+}
+
+func WithSQLiteCustomerRepository(connectionString string) OrderConfiguration {
+	return func(os *OrderService) error {
+		// Create the sqlite repo, if we needed parameters, such as connection strings they could be inputted here
+		cr, err := sqlite.New(context.Background(), connectionString)
+		if err != nil {
+			return err
+		}
+		os.customers = cr
 		return nil
 	}
 }

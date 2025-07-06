@@ -3,9 +3,13 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"log"
 	"taverne/aggregate"
+	"time"
 
-	"github.com/gofrs/uuid"
+	"github.com/google/uuid"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type SqliteRepository struct {
@@ -41,39 +45,50 @@ func (s sqliteCustomer) ToAggregate() aggregate.Customer {
 
 // Create a new sqlite repository
 func New(ctx context.Context, connectionString string) (*SqliteRepository, error) {
-	db, err := sql.Open("sqlite3", "ddd")
+	db, err := sql.Open("sqlite3", "/tmp/ddd.db")
+	defer db.Close()
 	if err != nil {
 		return nil, err
 	}
 
-	customers, err := db.ExecContext(context.Background(),
-		`CREATE TABLE IF NOT EXISTS customers (
+	// create tabke customers
+	_, err = db.ExecContext(context.Background(),
+		`CREATE TABLE IF NOT EXISTS customer (
 			id INTEGER PRIMARY KEY AUTOINCREMENT, 
-			title TEXT NOT NULL, 
-			artist TEXT NOT NULL, 
-			price REAL NOT NULL
+			name TEXT NOT NULL,
+			age INT
 		)`,
 	)
+
+	if err != nil {
+		return nil, fmt.Errorf("error creating table customer, got %v", err)
+	}
+
+	return &SqliteRepository{
+		db: db,
+	}, nil
 
 }
 
-func initDatabase(dbPath string) error {
-	var err error
-	db, err = sql.Open("sqlite", dbPath)
+func (sr *SqliteRepository) Get(id uuid.UUID) (aggregate.Customer, error) {
+	var c sqliteCustomer
+	return c.ToAggregate(), nil
+}
+
+func (sr *SqliteRepository) Add(c aggregate.Customer) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	internal := NewFromCustomer(c)
+	query := `INSERT INTO users (id, name, age) VALUES (?, ?, ?)`
+	_, err = db.ExecContext(ctx, query, id, name, nil)
 	if err != nil {
-		return err
+		log.Fatal("Insert failed:", err)
 	}
-	_, err = db.ExecContext(
-		context.Background(),
-		`CREATE TABLE IF NOT EXISTS album (
-			id INTEGER PRIMARY KEY AUTOINCREMENT, 
-			title TEXT NOT NULL, 
-			artist TEXT NOT NULL, 
-			price REAL NOT NULL
-		)`,
-	)
-	if err != nil {
-		return err
-	}
+
+	fmt.Println("Insert successful!")
 	return nil
+}
+
+func (sr *SqliteRepository) Update(c aggregate.Customer) error {
+	panic("to implement")
 }

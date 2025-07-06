@@ -33,7 +33,7 @@ func TestOrder_NewOrderService(t *testing.T) {
 
 	os, err := NewOrderService(
 		WithMemoryCustomerRepository(),
-		WithMemoryProductRepositroy(products),
+		WithMemoryProductRepository(products),
 	)
 
 	if err != nil {
