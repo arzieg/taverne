@@ -58,12 +58,27 @@ func Test_SQLiteTavern(t *testing.T) {
 		t.Error(err)
 	}
 
-	_, err = NewTavern(WithOrderService(os)) // tavern
+	tavern, err := NewTavern(WithOrderService(os))
 	if err != nil {
 		t.Error(err)
 	}
 
-	_, err = aggregate.NewCustomer("Donald") // customer
+	cust, err := aggregate.NewCustomer("Donald")
+	if err != nil {
+		t.Error(err)
+	}
+
+	err = os.customers.Add(cust)
+	if err != nil {
+		t.Error(err)
+	}
+
+	order := []uuid.UUID{
+		products[0].GetID(),
+	}
+
+	// Execute order
+	err = tavern.Order(cust.GetID(), order)
 	if err != nil {
 		t.Error(err)
 	}
