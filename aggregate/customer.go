@@ -10,7 +10,7 @@ import (
 
 var (
 	// ErrInvalidPerson is returned when the person is not valid in the NewCustomer factory
-	ErrInvalidPerson = errors.New("a customer has to habe an valid person")
+	ErrInvalidPerson = errors.New("a customer has to have an valid person")
 )
 
 type Customer struct {
